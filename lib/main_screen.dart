@@ -20,7 +20,7 @@ class MainScreen extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 60),
+          SizedBox(height: 50),
           FadeInDown(
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

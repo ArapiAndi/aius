@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:align_ai/services/camera.dart';
 import 'package:align_ai/services/render_pose_estimation.dart';
+import 'package:wakelock/wakelock.dart';
 
 class PushedPageA extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -50,6 +51,7 @@ class _PushedPageAState extends State<PushedPageA> {
 
   @override
   Widget build(BuildContext context) {
+    Wakelock.enable();
     Size screen = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(

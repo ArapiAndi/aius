@@ -125,7 +125,7 @@ class _RenderDataPoseEstimationState extends State<RenderDataPoseEstimation> {
         //in correct initial posture
         setState(() {
           whatToDo = 'Lift';
-          //correctColor = Colors.green;
+          correctColor = Colors.green;
         });
         squatUp = !squatUp;
         isCorrectPosture = false;
@@ -138,7 +138,7 @@ class _RenderDataPoseEstimationState extends State<RenderDataPoseEstimation> {
         squatUp = !squatUp;
         setState(() {
           whatToDo = 'Drop';
-          //correctColor = Colors.green;
+          correctColor = Colors.green;
         });
       }
 

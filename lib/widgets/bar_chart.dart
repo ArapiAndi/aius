@@ -30,7 +30,7 @@ class BarChartPoseTimeState extends State<BarChartPoseTime> {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 1.15,
+      aspectRatio: 1.10,
       child: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Card(
@@ -56,7 +56,7 @@ class BarChartPoseTimeState extends State<BarChartPoseTime> {
                     mainAxisSize: MainAxisSize.max,
                     children: <Widget>[
                       const Text(
-                        'Registrazione Pose',
+                        'Registrazione Posture',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 24,
@@ -182,10 +182,21 @@ class BarChartPoseTimeState extends State<BarChartPoseTime> {
                 ),
                 children: <TextSpan>[
                   TextSpan(
-                    text: (rod.y - 1).toString(),
+                    text: "Giusta: " +
+                        (rod.y - 1).toStringAsFixed(2) +
+                        " h" +
+                        "\n",
+                    style: const TextStyle(
+                      color: Color(0xff1abc9c),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  TextSpan(
+                    text: "Errata: " + (rod.y - 1).toStringAsFixed(2) + " h",
                     style: const TextStyle(
                       color: Colors.yellow,
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
