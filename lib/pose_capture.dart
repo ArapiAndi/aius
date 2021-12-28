@@ -1,3 +1,6 @@
+import 'package:animate_do/animate_do.dart';
+import 'package:circular_countdown/circular_countdown.dart';
+
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:tflite/tflite.dart';
@@ -24,7 +27,8 @@ class _PushedPageAState extends State<PushedPageA> {
   Color appBarColorRecording = Color(0xff1abc9c);
   String appBarTextNoRecording = 'Premere per tracciare';
   String appBarTextRecording = 'Tracciamento della Postura';
-  bool isRecoding = false;
+  bool isRecording = false;
+  bool isShowTimer = false;
 
   @override
   void initState() {
@@ -58,14 +62,15 @@ class _PushedPageAState extends State<PushedPageA> {
           title: GestureDetector(
               onTap: () {
                 setState(() {
-                  isRecoding = !isRecoding;
+                  isRecording = !isRecording;
+                  isShowTimer = isRecording;
                 });
               },
-              child: isRecoding
+              child: isRecording
                   ? Center(child: Text(appBarTextRecording))
                   : Center(child: Text(appBarTextNoRecording))),
           backgroundColor:
-              isRecoding ? appBarColorRecording : appBarColorNoRecording,
+              isRecording ? appBarColorRecording : appBarColorNoRecording,
           elevation: 0,
           toolbarHeight: 65,
           shape: RoundedRectangleBorder(
@@ -74,17 +79,38 @@ class _PushedPageAState extends State<PushedPageA> {
           ))),
       body: Stack(
         children: <Widget>[
-          Camera(
-            cameras: widget.cameras,
-            setRecognitions: _setRecognitions,
+          FadeInDown(
+            child: Camera(
+              cameras: widget.cameras,
+              setRecognitions: _setRecognitions,
+            ),
           ),
-          RenderDataPoseEstimation(
-              data: _data == null ? [] : _data,
-              previewH: max(_imageHeight, _imageWidth),
-              previewW: min(_imageHeight, _imageWidth),
-              screenH: screen.height,
-              screenW: screen.width,
-              isRecording: isRecoding),
+          isRecording
+              ? (isShowTimer
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(100.0),
+                        child: TimeCircularCountdown(
+                          textStyle: TextStyle(inherit: true, fontSize: 40),
+                          unit: CountdownUnit.second,
+                          countdownTotal: 4,
+                          strokeWidth: 18,
+                          countdownCurrentColor: Color(0xff1abc9c),
+                          onUpdated: (unit, remainingTime) => print('Updated'),
+                          onFinished: () => setState(() {
+                            isShowTimer = false;
+                          }),
+                        ),
+                      ),
+                    )
+                  : RenderDataPoseEstimation(
+                      data: _data == null ? [] : _data,
+                      previewH: max(_imageHeight, _imageWidth),
+                      previewW: min(_imageHeight, _imageWidth),
+                      screenH: screen.height,
+                      screenW: screen.width,
+                    ))
+              : SizedBox.shrink(),
         ],
       ),
     );

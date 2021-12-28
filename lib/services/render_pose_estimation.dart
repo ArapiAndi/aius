@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 class RenderDataPoseEstimation extends StatefulWidget {
   final List<dynamic> data;
@@ -6,15 +7,14 @@ class RenderDataPoseEstimation extends StatefulWidget {
   final int previewW;
   final double screenH;
   final double screenW;
-  final bool isRecording;
 
-  RenderDataPoseEstimation(
-      {this.data,
-      this.previewH,
-      this.previewW,
-      this.screenH,
-      this.screenW,
-      this.isRecording});
+  RenderDataPoseEstimation({
+    this.data,
+    this.previewH,
+    this.previewW,
+    this.screenH,
+    this.screenW,
+  });
   @override
   _RenderDataPoseEstimationState createState() =>
       _RenderDataPoseEstimationState();
@@ -22,6 +22,11 @@ class RenderDataPoseEstimation extends StatefulWidget {
 
 class _RenderDataPoseEstimationState extends State<RenderDataPoseEstimation> {
   Map<String, List<double>> inputArr;
+
+  bool isFirstTime = true;
+  double distanceShoulderNose = 0.0;
+  double distanceNSRL = 20;
+  double percenstageDistance = 0.60;
 
   double slopeShoulder = 0;
   double slopeEyes = 0;
@@ -49,6 +54,18 @@ class _RenderDataPoseEstimationState extends State<RenderDataPoseEstimation> {
   var rightKneePos = Vector(0, 0);
   var leftAnklePos = Vector(0, 0);
   var rightAnklePos = Vector(0, 0);
+
+  double getDistancePoints(p1, p2, isDistorted) {
+    double px = p1.x;
+    double py = p1.y;
+    if (isDistorted) {
+      px = px - 280;
+      py = py - 80;
+    }
+    double distanceX = px - p2.x;
+    double distanceY = py - p2.y;
+    return sqrt(pow(distanceX, 2) + pow(distanceY, 2));
+  }
 
   @override
   void initState() {
@@ -164,6 +181,15 @@ class _RenderDataPoseEstimationState extends State<RenderDataPoseEstimation> {
 
           _getKeyPoints(k, x, y);
 
+          if (isFirstTime) {
+            double distanceR = getDistancePoints(nose, rightShoulderPos, true);
+            double distanceL = getDistancePoints(nose, leftShoulderPos, true);
+            if ((distanceL - distanceR).abs() <= distanceNSRL) {
+              distanceShoulderNose = distanceR;
+              isFirstTime = false;
+            }
+          }
+
           if (k["part"] == 'leftEye') {
             leftEyePos.x = x - 280;
             leftEyePos.y = y - 80;
@@ -207,101 +233,94 @@ class _RenderDataPoseEstimationState extends State<RenderDataPoseEstimation> {
       return lists;
     }
 
+    print(getDistancePoints(nose, rightShoulderPos, false));
+    print(getDistancePoints(nose, leftShoulderPos, false));
+    print(distanceShoulderNose);
     correctColor = ((slopeEyes).abs() <= slopeCondition &&
-            (slopeShoulder).abs() <= slopeCondition)
+                (slopeShoulder).abs() <= slopeCondition) &&
+            (getDistancePoints(nose, rightShoulderPos, false) >=
+                distanceShoulderNose * percenstageDistance)
         ? Colors.green
         : Colors.blue;
-    return widget.isRecording
-        ? Stack(
-            children: <Widget>[
-              Stack(
-                children: [
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: leftEyePos, right: nose, color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: nose, right: rightEyePos, color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: leftShoulderPos,
-                        right: rightShoulderPos,
-                        color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: leftElbowPos,
-                        right: leftShoulderPos,
-                        color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: leftWristPos,
-                        right: leftElbowPos,
-                        color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: rightElbowPos,
-                        right: rightShoulderPos,
-                        color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: rightWristPos,
-                        right: rightElbowPos,
-                        color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: leftShoulderPos,
-                        right: leftHipPos,
-                        color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: leftHipPos,
-                        right: leftKneePos,
-                        color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: leftKneePos,
-                        right: leftAnklePos,
-                        color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: rightShoulderPos,
-                        right: rightHipPos,
-                        color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: rightHipPos,
-                        right: rightKneePos,
-                        color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: rightKneePos,
-                        right: rightAnklePos,
-                        color: correctColor),
-                  ),
-                  CustomPaint(
-                    painter: MyPainter(
-                        left: leftHipPos,
-                        right: rightHipPos,
-                        color: correctColor),
-                  ),
-                ],
-              ),
-              Stack(children: _renderKeypoints()),
-            ],
-          )
-        : SizedBox.shrink();
+    return Stack(
+      children: <Widget>[
+        Stack(
+          children: [
+            CustomPaint(
+              painter:
+                  MyPainter(left: leftEyePos, right: nose, color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: nose, right: rightEyePos, color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: leftShoulderPos,
+                  right: rightShoulderPos,
+                  color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: leftElbowPos,
+                  right: leftShoulderPos,
+                  color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: leftWristPos, right: leftElbowPos, color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: rightElbowPos,
+                  right: rightShoulderPos,
+                  color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: rightWristPos,
+                  right: rightElbowPos,
+                  color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: leftShoulderPos,
+                  right: leftHipPos,
+                  color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: leftHipPos, right: leftKneePos, color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: leftKneePos, right: leftAnklePos, color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: rightShoulderPos,
+                  right: rightHipPos,
+                  color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: rightHipPos, right: rightKneePos, color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: rightKneePos,
+                  right: rightAnklePos,
+                  color: correctColor),
+            ),
+            CustomPaint(
+              painter: MyPainter(
+                  left: leftHipPos, right: rightHipPos, color: correctColor),
+            ),
+          ],
+        ),
+        Stack(children: _renderKeypoints()),
+      ],
+    );
   }
 }
 
